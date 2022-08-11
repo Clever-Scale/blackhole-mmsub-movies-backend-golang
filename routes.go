@@ -8,25 +8,31 @@ import (
 func InitRoutes(r *gin.Engine) *gin.Engine {
 	// Routes
 
-	// books
-	books := r.Group("/books")
-	books.GET("/", controllers.FindBooks)
-	books.GET("/:id", controllers.FindBook)
-	books.POST("/", controllers.JWTAuthMiddleware(), controllers.CreateBook)
-	books.PATCH("/:id", controllers.JWTAuthMiddleware(), controllers.UpdateBook)
-	books.DELETE("/:id", controllers.JWTAuthMiddleware(), controllers.DeleteBook)
+	// API version 1
+	v1 := r.Group("/v1")
+	{
+		// books
+		books := v1.Group("/books")
+		books.Use(controllers.JWTAuthMiddleware())
+		books.GET("/", controllers.FindBooks)
+		books.GET("/:id", controllers.FindBook)
+		books.POST("/", controllers.CreateBook)
+		books.PATCH("/:id", controllers.UpdateBook)
+		books.DELETE("/:id", controllers.DeleteBook)
 
-	// users
-	users := r.Group("/users")
-	users.GET("/", controllers.JWTAuthMiddleware(), controllers.FindUsers)
-	users.GET("/:id", controllers.JWTAuthMiddleware(), controllers.FindUser)
-	users.POST("/", controllers.JWTAuthMiddleware(), controllers.CreateUser)
-	users.PATCH("/:id", controllers.JWTAuthMiddleware(), controllers.UpdateUser)
-	users.DELETE("/:id", controllers.JWTAuthMiddleware(), controllers.DeleteUser)
+		// users
+		users := v1.Group("/users")
+		users.Use(controllers.JWTAuthMiddleware())
+		users.GET("/", controllers.FindUsers)
+		users.GET("/:id", controllers.FindUser)
+		users.POST("/", controllers.CreateUser)
+		users.PATCH("/:id", controllers.UpdateUser)
+		users.DELETE("/:id", controllers.DeleteUser)
 
-	// authentication
-	auth := r.Group("/auth")
-	auth.POST("/login", controllers.LoginUser)
+		// authentication
+		auth := v1.Group("/auth")
+		auth.POST("/login", controllers.LoginUser)
+	}
 
 	return r
 }
