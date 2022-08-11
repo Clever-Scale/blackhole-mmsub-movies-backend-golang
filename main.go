@@ -15,21 +15,24 @@ func main() {
 	// Routes
 
 	// books
-	r.GET("/books", controllers.FindBooks)
-	r.GET("/books/:id", controllers.FindBook)
-	r.POST("/books", controllers.CreateBook)
-	r.PATCH("/books/:id", controllers.UpdateBook)
-	r.DELETE("/books/:id", controllers.DeleteBook)
+	books := r.Group("/books")
+	books.GET("/books", controllers.FindBooks)
+	books.GET("/books/:id", controllers.FindBook)
+	books.POST("/books", controllers.JWTAuthMiddleware(), controllers.CreateBook)
+	books.PATCH("/books/:id", controllers.JWTAuthMiddleware(), controllers.UpdateBook)
+	books.DELETE("/books/:id", controllers.JWTAuthMiddleware(), controllers.DeleteBook)
 
 	// users
-	r.GET("/users", controllers.FindUsers)
-	r.GET("/users/:id", controllers.FindUser)
-	r.POST("/users", controllers.CreateUser)
-	r.PATCH("/users/:id", controllers.UpdateUser)
-	r.DELETE("/users/:id", controllers.DeleteUser)
+	users := r.Group("/users")
+	users.GET("/", controllers.JWTAuthMiddleware(), controllers.FindUsers)
+	users.GET("/:id", controllers.JWTAuthMiddleware(), controllers.FindUser)
+	users.POST("/", controllers.JWTAuthMiddleware(), controllers.CreateUser)
+	users.PATCH("/:id", controllers.JWTAuthMiddleware(), controllers.UpdateUser)
+	users.DELETE("/:id", controllers.JWTAuthMiddleware(), controllers.DeleteUser)
 
 	// authentication
-	r.POST("/login", controllers.LoginUser)
+	auth := r.Group("/auth")
+	auth.POST("/login", controllers.LoginUser)
 
 	// Run the server
 	r.Run()
