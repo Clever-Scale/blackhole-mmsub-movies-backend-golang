@@ -2,9 +2,10 @@ FROM golang:1.19.0-alpine3.16 as build
 WORKDIR /app
 RUN apk add build-base
 # pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
-COPY go.mod go.sum ./
+COPY go.mod go.sum Makefile ./blackhole-dashboard ./
 RUN export GIN_MODE=release
 RUN go mod download && go mod verify
+RUN make build-dashboard-linux
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GIN_MODE=release go build -v -o /server ./
 
