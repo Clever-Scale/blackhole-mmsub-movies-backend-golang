@@ -8,6 +8,10 @@ import (
 func InitRoutes(r *gin.Engine) *gin.Engine {
 	// Routes
 
+	// Homepage
+	// r.Use(static.Serve("/dashboard", static.LocalFile("./blackhole-dashboard/dist", true)))
+	r.Static("/dashboard", "blackhole-dashboard/dist")
+
 	// API version 1
 	v1 := r.Group("/v1")
 	{
