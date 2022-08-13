@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/rahmanfadhil/gin-bookstore/controllers"
+	"github.com/heinkozin/blackhole-mmsub-movies/controllers"
 )
 
 func InitRoutes(r *gin.Engine) *gin.Engine {
@@ -11,15 +11,6 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 	// API version 1
 	v1 := r.Group("/v1")
 	{
-		// books
-		books := v1.Group("/books")
-		books.Use(controllers.JWTAuthMiddleware())
-		books.GET("/", controllers.FindBooks)
-		books.GET("/:id", controllers.FindBook)
-		books.POST("/", controllers.CreateBook)
-		books.PATCH("/:id", controllers.UpdateBook)
-		books.DELETE("/:id", controllers.DeleteBook)
-
 		// users
 		users := v1.Group("/users")
 		users.Use(controllers.JWTAuthMiddleware())

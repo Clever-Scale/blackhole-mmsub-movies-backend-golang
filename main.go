@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/heinkozin/blackhole-mmsub-movies/models"
 	"github.com/joho/godotenv"
-	"github.com/rahmanfadhil/gin-bookstore/models"
 )
 
 func main() {

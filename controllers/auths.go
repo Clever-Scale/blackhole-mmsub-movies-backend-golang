@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/rahmanfadhil/gin-bookstore/models"
+	"github.com/heinkozin/blackhole-mmsub-movies/models"
 )
 
 type LoginUserInput struct {
@@ -51,7 +51,7 @@ func GenerateToken(id int) (string, error) {
 	// Create our own statement
 	c := Claims{int(id), jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExpireDuration)),
-		Issuer:    "gin-bookstore",
+		Issuer:    "Blackhole MMSub Movies",
 	}}
 	// Creates a signed object using the specified signing method
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)

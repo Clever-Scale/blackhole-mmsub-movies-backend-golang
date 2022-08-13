@@ -19,7 +19,7 @@ func ConnectDatabase() {
 		panic("Failed to connect to database!")
 	}
 
-	database.AutoMigrate(&Book{}, &User{})
+	database.AutoMigrate(&User{}, &Movie{})
 
 	DB = database
 }
