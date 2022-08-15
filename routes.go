@@ -32,6 +32,14 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 		movies.PATCH("/:id", controllers.UpdateMovie)
 		movies.DELETE("/:id", controllers.DeleteMovie)
 
+		// movie source
+		movie_source := v1.Group("/movie-sources")
+		movie_source.GET("/", controllers.FindMovie)
+		movie_source.GET("/:id", controllers.FindMovie)
+		movie_source.POST("/", controllers.CreateMovieSource)
+		movie_source.PATCH("/:id", controllers.UpdateMovie)
+		movie_source.DELETE("/:id", controllers.DeleteMovie)
+
 		// genres
 		genres := v1.Group("/genres")
 		genres.GET("/", controllers.FindGenres)

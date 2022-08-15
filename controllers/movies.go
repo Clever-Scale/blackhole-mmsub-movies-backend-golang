@@ -31,7 +31,7 @@ type UpdateMovieInput struct {
 
 func FindMovies(c *gin.Context) {
 	var movies []models.Movie
-	models.DB.Preload("Genres").Find(&movies)
+	models.DB.Preload("Genres").Preload("MovieSource").Find(&movies)
 
 	c.JSON(200, gin.H{
 		"message": "Movies retrieved successfully",
