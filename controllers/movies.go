@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
+	"gorm.io/gorm/clause"
 )
 
 type CreateMovieInput struct {
@@ -33,7 +34,8 @@ func FindMovies(c *gin.Context) {
 	models.DB.Preload("Genres").Find(&movies)
 
 	c.JSON(200, gin.H{
-		"data": movies,
+		"message": "Movies retrieved successfully",
+		"data":    movies,
 	})
 }
 
@@ -96,19 +98,34 @@ func UpdateMovie(c *gin.Context) {
 		return
 	}
 
-	if err := models.DB.Model(&movie).Where("id = ?", c.Param("id")).Updates(input).Error; err != nil {
+	if err := models.DB.Model(&movie).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Updates(
+		models.Movie{
+			Title:         input.Title,
+			Description:   input.Description,
+			StreamingTime: input.StreamingTime,
+			ParentID:      input.ParentID,
+			ImDbID:        input.ImDbID,
+		}).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
 	c.JSON(200, gin.H{
 		"message": "Movie updated successfully",
-		"data":    input,
+		"data":    movie,
 	})
 }
 
 func DeleteMovie(c *gin.Context) {
+	var movie models.Movie
+	if err := models.DB.Where("id = ?", c.Param("id")).First(&movie).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		return
+	}
+
+	models.DB.Delete(&movie)
+
 	c.JSON(200, gin.H{
-		"message": "pong",
+		"message": "Movie deleted successfully",
 	})
 }
