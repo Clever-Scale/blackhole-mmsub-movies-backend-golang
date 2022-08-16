@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginUserInput struct {
@@ -35,9 +36,17 @@ func LoginUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
 	}
+
 	// Check user in database
-	user := models.User{Email: input.Email, Password: input.Password}
-	if err := models.DB.Find(&user, "email = ? AND password = ?", input.Email, input.Password).First(&user).Error; err != nil {
+	user := models.User{Email: input.Email}
+	if err := models.DB.Find(&user, "email = ?", input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusFound, gin.H{
+			"message": "User not found!",
+			"success": false,
+		})
+		return
+	}
+	if !CheckPasswordHash(input.Password, user.Password) {
 		c.JSON(http.StatusFound, gin.H{
 			"data":    "Credential wrong!",
 			"success": false,
@@ -92,7 +101,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		if authHeader == "" {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    2003,
-				"msg":     "Request header auth Empty",
+				"message": "Request header auth Empty",
 				"success": false,
 			})
 			c.Abort()
@@ -103,7 +112,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    2004,
-				"msg":     "Request header auth Incorrect format",
+				"message": "Request header auth Incorrect format",
 				"success": false,
 			})
 			c.Abort()
@@ -114,7 +123,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    2005,
-				"msg":     "invalid Token",
+				"message": "invalid Token",
 				"success": false,
 			})
 			c.Abort()
@@ -127,4 +136,14 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		c.Set("user", user)
 		c.Next() // Subsequent processing functions can use c.Get("username") to obtain the currently requested user information
 	}
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

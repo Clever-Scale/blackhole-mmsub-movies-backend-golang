@@ -52,8 +52,9 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	user := models.User{Name: input.Name, Email: input.Email, Password: input.Password}
+	hashedPassword, _ := HashPassword(input.Password)
 
+	user := models.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
 	// check user email in database
 	if err := models.DB.Where("email = ?", input.Email).First(&user).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists!", "success": false})
