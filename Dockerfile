@@ -14,11 +14,12 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GIN_MODE=release go build -v -o /server ./
 
 # Run the app
-FROM gcr.io/distroless/static-debian11
+FROM alpine:latest as run
 COPY --from=build /server .
 COPY --from=build /app/dashboard-dist/ ./dashboard-dist/
 ARG DATABASE_URL
 ENV GIN_MODE=release
+RUN export GIN_MODE=release
 ENV DATABASE_URL=${DATABASE_URL}
 
 EXPOSE 8080
