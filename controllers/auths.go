@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginUserInput struct {
@@ -32,18 +33,34 @@ func LoginUser(c *gin.Context) {
 	// Validate input
 	var input LoginUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"data": err})
+		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
 	}
+
 	// Check user in database
-	user := models.User{Email: input.Email, Password: input.Password}
-	if err := models.DB.Find(&user, "email = ? AND password = ?", input.Email, input.Password).First(&user).Error; err != nil {
-		c.JSON(http.StatusFound, gin.H{"data": "Credential wrong!"})
+	user := models.User{Email: input.Email}
+	if err := models.DB.Find(&user, "email = ?", input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusFound, gin.H{
+			"message": "User not found!",
+			"success": false,
+		})
+		return
+	}
+	if !CheckPasswordHash(input.Password, user.Password) {
+		c.JSON(http.StatusFound, gin.H{
+			"data":    "Credential wrong!",
+			"success": false,
+		})
 		return
 	}
 	// Generate token
 	token, _ := GenerateToken(int(user.ID))
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": &LoginSuccess{user, token}})
+}
+
+func Me(c *gin.Context) {
+	user := c.MustGet("user").(models.User)
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": user})
 }
 
 func GenerateToken(id int) (string, error) {
@@ -83,8 +100,9 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		authHeader := c.Request.Header.Get("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusOK, gin.H{
-				"code": 2003,
-				"msg":  "Request header auth Empty",
+				"code":    2003,
+				"message": "Request header auth Empty",
+				"success": false,
 			})
 			c.Abort()
 			return
@@ -93,8 +111,9 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.JSON(http.StatusOK, gin.H{
-				"code": 2004,
-				"msg":  "Request header auth Incorrect format",
+				"code":    2004,
+				"message": "Request header auth Incorrect format",
+				"success": false,
 			})
 			c.Abort()
 			return
@@ -103,14 +122,28 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		mc, err := ParseToken(parts[1])
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
-				"code": 2005,
-				"msg":  "invalid Token",
+				"code":    2005,
+				"message": "invalid Token",
+				"success": false,
 			})
 			c.Abort()
 			return
 		}
+
+		user := models.User{}
+		models.DB.Where("id = ?", mc.ID).First(&user)
 		// Save the currently requested username information to the requested context c
-		c.Set("id", mc.ID)
+		c.Set("user", user)
 		c.Next() // Subsequent processing functions can use c.Get("username") to obtain the currently requested user information
 	}
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

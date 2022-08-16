@@ -12,8 +12,10 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 	// r.Use(static.Serve("/dashboard", static.LocalFile("./blackhole-dashboard/dist", true)))
 	r.Static("/dashboard", "dashboard-dist")
 
+	api := r.Group("/api")
+
 	// API version 1
-	v1 := r.Group("/v1")
+	v1 := api.Group("/v1")
 	{
 		// users
 		users := v1.Group("/users")
@@ -32,6 +34,14 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 		movies.PATCH("/:id", controllers.UpdateMovie)
 		movies.DELETE("/:id", controllers.DeleteMovie)
 
+		// movie source
+		movie_source := v1.Group("/movie-sources")
+		movie_source.GET("/", controllers.FindMovie)
+		movie_source.GET("/:id", controllers.FindMovie)
+		movie_source.POST("/", controllers.CreateMovieSource)
+		movie_source.PATCH("/:id", controllers.UpdateMovie)
+		movie_source.DELETE("/:id", controllers.DeleteMovie)
+
 		// genres
 		genres := v1.Group("/genres")
 		genres.GET("/", controllers.FindGenres)
@@ -44,6 +54,7 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 		auth := v1.Group("/auth")
 		auth.POST("/register", controllers.CreateUser)
 		auth.POST("/login", controllers.LoginUser)
+		auth.POST("/me", controllers.JWTAuthMiddleware(), controllers.Me)
 	}
 
 	return r

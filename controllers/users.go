@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
+	"gorm.io/gorm/clause"
 )
 
 type CreateUserInput struct {
@@ -22,70 +23,98 @@ type UpdateUserInput struct {
 func FindUsers(c *gin.Context) {
 	var users []models.User
 	models.DB.Find(&users)
-	c.JSON(http.StatusOK, gin.H{"data": users})
+	c.JSON(http.StatusOK, gin.H{
+		"data":    users,
+		"success": true,
+		"message": "Users found successfully",
+	})
 }
 
 func FindUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User found successfully",
+		"data":    user,
+		"success": true,
+	})
 }
 
 func CreateUser(c *gin.Context) {
 	// Validate input
 	var input CreateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
 		return
 	}
 
-	user := models.User{Name: input.Name, Email: input.Email, Password: input.Password}
+	hashedPassword, _ := HashPassword(input.Password)
 
+	user := models.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
 	// check user email in database
 	if err := models.DB.Where("email = ?", input.Email).First(&user).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists!"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists!", "success": false})
 		return
 	}
 
 	// Create user
 	models.DB.Create(&user)
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User created successfully",
+		"data":    user,
+		"success": true,
+	})
 }
 
 func UpdateUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
 		return
 	}
 
 	// Validate input
 	var input UpdateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
 		return
 	}
-	user.Name = input.Name
-	user.Email = input.Email
-	models.DB.Save(&user)
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	if err := models.DB.Model(&user).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Updates(
+		models.User{
+			Name:     input.Name,
+			Email:    input.Email,
+			Password: input.Password,
+		}).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err, "success": false})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User updated successfully",
+		"data":    user,
+		"success": true,
+	})
 }
 
 func DeleteUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
 		return
 	}
 	models.DB.Delete(&user)
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User deleted successfully",
+		"data":    user,
+		"success": true,
+	})
 }

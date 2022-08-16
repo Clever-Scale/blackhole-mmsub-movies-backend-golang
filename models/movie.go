@@ -15,6 +15,7 @@ type Movie struct {
 	ImDbID        uint           `json:"imdb_id"`
 	ReleasedAt    time.Time      `json:"release_date"`
 	Genres        []Genre        `json:"genres" gorm:"many2many:movie_genres;"`
+	MovieSource   []MovieSource  `json:"movie_sources" gorm:"foreignKey:MovieID"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `json:"deleted_at" gorm:"index"`
