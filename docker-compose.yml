@@ -4,8 +4,29 @@ services:
     image: gin-bookstore-api
     build: .
     ports:
-      - "80:8080"
+      - "8080:8080"
     env_file: .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
     restart: always
+    depends_on:
+      - db
+    links:
+      - db
+
+  db:
+    image: postgres:14.5-alpine
+    ports:
+      - "5432:5432"
+    env_file: .env
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres:
+    driver: local
