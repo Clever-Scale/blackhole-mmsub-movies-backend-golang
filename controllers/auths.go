@@ -32,18 +32,26 @@ func LoginUser(c *gin.Context) {
 	// Validate input
 	var input LoginUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"data": err})
+		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
 	}
 	// Check user in database
 	user := models.User{Email: input.Email, Password: input.Password}
 	if err := models.DB.Find(&user, "email = ? AND password = ?", input.Email, input.Password).First(&user).Error; err != nil {
-		c.JSON(http.StatusFound, gin.H{"data": "Credential wrong!"})
+		c.JSON(http.StatusFound, gin.H{
+			"data":    "Credential wrong!",
+			"success": false,
+		})
 		return
 	}
 	// Generate token
 	token, _ := GenerateToken(int(user.ID))
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": &LoginSuccess{user, token}})
+}
+
+func Me(c *gin.Context) {
+	user := c.MustGet("user").(models.User)
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": user})
 }
 
 func GenerateToken(id int) (string, error) {
@@ -83,8 +91,9 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		authHeader := c.Request.Header.Get("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusOK, gin.H{
-				"code": 2003,
-				"msg":  "Request header auth Empty",
+				"code":    2003,
+				"msg":     "Request header auth Empty",
+				"success": false,
 			})
 			c.Abort()
 			return
@@ -93,8 +102,9 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.JSON(http.StatusOK, gin.H{
-				"code": 2004,
-				"msg":  "Request header auth Incorrect format",
+				"code":    2004,
+				"msg":     "Request header auth Incorrect format",
+				"success": false,
 			})
 			c.Abort()
 			return
@@ -103,14 +113,18 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		mc, err := ParseToken(parts[1])
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
-				"code": 2005,
-				"msg":  "invalid Token",
+				"code":    2005,
+				"msg":     "invalid Token",
+				"success": false,
 			})
 			c.Abort()
 			return
 		}
+
+		user := models.User{}
+		models.DB.Where("id = ?", mc.ID).First(&user)
 		// Save the currently requested username information to the requested context c
-		c.Set("id", mc.ID)
+		c.Set("user", user)
 		c.Next() // Subsequent processing functions can use c.Get("username") to obtain the currently requested user information
 	}
 }

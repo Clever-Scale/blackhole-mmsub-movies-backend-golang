@@ -17,7 +17,7 @@ type CreateMovieSourceInput struct {
 func CreateMovieSource(c *gin.Context) {
 	var input CreateMovieSourceInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"data": err})
+		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
 	}
 
@@ -33,6 +33,7 @@ func CreateMovieSource(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Movie source created successfully",
 		"data":    &movieSource,
+		"success": true,
 	})
 
 }

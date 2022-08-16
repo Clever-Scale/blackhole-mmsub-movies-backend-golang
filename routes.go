@@ -52,6 +52,7 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 		auth := v1.Group("/auth")
 		auth.POST("/register", controllers.CreateUser)
 		auth.POST("/login", controllers.LoginUser)
+		auth.POST("/me", controllers.JWTAuthMiddleware(), controllers.Me)
 	}
 
 	return r

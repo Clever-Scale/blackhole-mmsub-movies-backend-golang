@@ -22,6 +22,7 @@ func FindGenres(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Retrieved genres successfully",
 		"data":    genres,
+		"success": true,
 	})
 }
 
@@ -29,7 +30,9 @@ func FindGenre(c *gin.Context) {
 	var genre models.Genre
 	models.DB.First(&genre, c.Param("id"))
 	c.JSON(200, gin.H{
-		"message": genre,
+		"data":    genre,
+		"success": true,
+		"message": "Genre found successfully",
 	})
 }
 
@@ -44,7 +47,7 @@ func CreateGenre(c *gin.Context) {
 
 	models.DB.Create(&genre)
 
-	c.JSON(http.StatusOK, gin.H{"data": genre})
+	c.JSON(http.StatusOK, gin.H{"data": genre, "success": true, "message": "Genre created successfully"})
 }
 
 func UpdateGenre(c *gin.Context) {
@@ -52,12 +55,13 @@ func UpdateGenre(c *gin.Context) {
 	genre := models.Genre{}
 
 	if err := models.DB.Model(&genre).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Update("title", input.Title).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"data": err})
+		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
 	}
 
 	c.JSON(200, gin.H{
 		"message": "Genre updated successfully",
 		"data":    genre,
+		"success": true,
 	})
 }
