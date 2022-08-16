@@ -18,10 +18,20 @@ type UpdateGenreInput struct {
 
 func FindGenres(c *gin.Context) {
 	var genres []models.Genre
-	models.DB.Preload("Movies").Find(&genres)
+
+	var genreCount int64
+	models.DB.Preload("Movies").Find(&genres).Count(&genreCount)
+
+	// return genres and movie count for each genre
+	for i := 0; i < len(genres); i++ {
+		// get movie count for each genre
+		genres[i].MovieCount = len(genres[i].Movies)
+	}
+
 	c.JSON(200, gin.H{
 		"message": "Retrieved genres successfully",
 		"data":    genres,
+		"total":   genreCount,
 		"success": true,
 	})
 }

@@ -31,11 +31,13 @@ type UpdateMovieInput struct {
 
 func FindMovies(c *gin.Context) {
 	var movies []models.Movie
-	models.DB.Preload("Genres").Preload("MovieSource").Find(&movies)
+	var movieCount int64
+	models.DB.Preload("Genres").Preload("MovieSource").Find(&movies).Count(&movieCount)
 
 	c.JSON(200, gin.H{
 		"message": "Movies retrieved successfully",
 		"data":    movies,
+		"total":   movieCount,
 		"success": true,
 	})
 }
