@@ -12,8 +12,10 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 	// r.Use(static.Serve("/dashboard", static.LocalFile("./blackhole-dashboard/dist", true)))
 	r.Static("/dashboard", "dashboard-dist")
 
+	api := r.Group("/api")
+
 	// API version 1
-	v1 := r.Group("/v1")
+	v1 := api.Group("/v1")
 	{
 		// users
 		users := v1.Group("/users")
