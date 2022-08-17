@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/heinkozin/blackhole-mmsub-movies/libs"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
 	"gorm.io/gorm/clause"
 )
@@ -20,7 +21,7 @@ func FindGenres(c *gin.Context) {
 	var genres []models.Genre
 
 	var genreCount int64
-	models.DB.Preload("Movies").Find(&genres).Count(&genreCount)
+	models.DB.Scopes(libs.Paginate(c)).Preload("Movies").Find(&genres).Count(&genreCount)
 
 	// return genres and movie count for each genre
 	for i := 0; i < len(genres); i++ {
@@ -29,10 +30,12 @@ func FindGenres(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message": "Retrieved genres successfully",
-		"data":    genres,
-		"total":   genreCount,
-		"success": true,
+		"message":  "Retrieved genres successfully",
+		"data":     genres,
+		"total":    genreCount,
+		"page":     c.Query("page"),
+		"pageSize": c.Query("pageSize"),
+		"success":  true,
 	})
 }
 

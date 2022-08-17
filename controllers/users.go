@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/heinkozin/blackhole-mmsub-movies/libs"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
 	"gorm.io/gorm/clause"
 )
@@ -22,11 +24,27 @@ type UpdateUserInput struct {
 
 func FindUsers(c *gin.Context) {
 	var users []models.User
-	models.DB.Find(&users)
+	// All users count
+	var count int64
+	models.DB.Model(&models.User{}).Count(&count)
+	models.DB.Scopes(libs.Paginate(c)).Find(&users)
+
+	page, _ := strconv.Atoi(c.Query("page"))
+	if page == 0 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
+	if pageSize == 0 {
+		pageSize = 10
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"data":    users,
-		"success": true,
-		"message": "Users found successfully",
+		"data":     users,
+		"success":  true,
+		"message":  "Users found successfully",
+		"page":     page,
+		"pageSize": pageSize,
+		"total":    count,
 	})
 }
 
