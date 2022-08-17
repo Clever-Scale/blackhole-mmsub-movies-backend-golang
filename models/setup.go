@@ -3,11 +3,18 @@ package models
 import (
 	"os"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
+
+var RedisClient = redis.NewClient(&redis.Options{
+	Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+	Password: "", // no password set
+	DB:       0,
+})
 
 func ConnectDatabase() {
 

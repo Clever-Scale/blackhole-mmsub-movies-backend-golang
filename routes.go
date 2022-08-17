@@ -48,7 +48,7 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 		genres.GET("/:id", controllers.FindGenre)
 		genres.POST("/", controllers.CreateGenre)
 		genres.PATCH("/:id", controllers.UpdateGenre)
-		// genres.DELETE("/:id", controllers.)
+		genres.DELETE("/:id", controllers.DeleteGenre)
 
 		// authentication
 		auth := v1.Group("/auth")

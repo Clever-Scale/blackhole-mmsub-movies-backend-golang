@@ -11,8 +11,10 @@ services:
     restart: always
     depends_on:
       - db
+      - redis
     links:
       - db
+      - redis
 
   db:
     image: postgres:14.5-alpine
@@ -27,6 +29,20 @@ services:
       - postgres:/var/lib/postgresql/data
     restart: always
 
+  redis:
+    image: redis:6.2.7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/usr/local/etc/redis
+    restart: always
+    depends_on:
+      - db
+    links:
+      - db
+
 volumes:
   postgres:
+    driver: local
+  redis:
     driver: local

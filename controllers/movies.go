@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,33 +32,29 @@ type UpdateMovieInput struct {
 
 func FindMovies(c *gin.Context) {
 	var movies []models.Movie
-	var movieCount int64
 
-	models.DB.Model(&models.Movie{}).Count(&movieCount)
-	models.DB.Scopes(libs.Paginate(c)).Preload("Genres.Movies").Preload(clause.Associations).Find(&movies)
+	page := libs.PG.With(models.DB.Model(&models.Movie{}).Preload("Genres.Movies").Preload(clause.Associations)).Request(c.Request).Cache("movies").Response(&movies)
 
-	for i := 0; i < len(movies); i++ {
-		for y := 0; y < len(movies[i].Genres); y++ {
+	for i := range movies {
+		for y := range movies[i].Genres {
 			movies[i].Genres[y].MovieCount = len(movies[i].Genres[y].Movies)
 		}
 	}
 
-	page, _ := strconv.Atoi(c.Query("page"))
-	if page == 0 {
-		page = 1
-	}
-	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
-	if pageSize == 0 {
-		pageSize = 10
-	}
-
 	c.JSON(200, gin.H{
-		"message":  "Movies retrieved successfully",
-		"total":    movieCount,
-		"page":     page,
-		"pageSize": pageSize,
-		"data":     movies,
-		"success":  true,
+		"message": "Movies retrieved successfully",
+		"data":    movies,
+		"success": true,
+		"pagination": libs.Pagination{
+			Page:       int(page.Page),
+			PageSize:   int(page.Size),
+			Total:      int(page.Total),
+			TotalPages: int(page.TotalPages),
+			MaxPage:    int(page.MaxPage),
+			First:      page.First,
+			Last:       page.Last,
+			Visible:    int(page.Visible),
+		},
 	})
 }
 
@@ -71,7 +66,7 @@ func FindMovie(c *gin.Context) {
 		return
 	}
 
-	for i := 0; i < len(movie.Genres); i++ {
+	for i := range movie.Genres {
 		movie.Genres[i].MovieCount = len(movie.Genres[i].Movies)
 	}
 
@@ -148,7 +143,7 @@ func UpdateMovie(c *gin.Context) {
 		models.DB.Model(&movie).Preload("Movies").Association("Genres").Append(&genre)
 	}
 
-	for i := 0; i < len(movie.Genres); i++ {
+	for i := range movie.Genres {
 		movie.Genres[i].MovieCount = len(movie.Genres[i].Movies)
 	}
 
@@ -161,6 +156,7 @@ func UpdateMovie(c *gin.Context) {
 
 func DeleteMovie(c *gin.Context) {
 	var movie models.Movie
+
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&movie).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
 		return
