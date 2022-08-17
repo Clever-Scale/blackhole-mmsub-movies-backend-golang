@@ -21,7 +21,7 @@ type Pagination struct {
 
 var adapterConfig = cache.RedisCacheConfig{
 	Client:    models.RedisClient,
-	ExpiresIn: 30 * time.Millisecond,
+	ExpiresIn: time.Minute / 2,
 }
 
 var PG = paginate.New(&paginate.Config{
