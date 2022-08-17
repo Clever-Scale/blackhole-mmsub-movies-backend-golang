@@ -64,7 +64,12 @@ func UpdateGenre(c *gin.Context) {
 	var input UpdateGenreInput
 	genre := models.Genre{}
 
-	if err := models.DB.Model(&genre).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Update("title", input.Title).Error; err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
+		return
+	}
+
+	if err := models.DB.Model(&genre).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Updates(models.Genre{Title: input.Title}).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
 	}
