@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/heinkozin/blackhole-mmsub-movies/libs"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
 	"gorm.io/gorm/clause"
 )
@@ -31,11 +32,11 @@ type UpdateMovieInput struct {
 
 func FindMovies(c *gin.Context) {
 	var movies []models.Movie
-	var movieCount int64
-	models.DB.Preload("Genres.Movies").Preload(clause.Associations).Find(&movies).Count(&movieCount)
 
-	for i := 0; i < len(movies); i++ {
-		for y := 0; y < len(movies[i].Genres); y++ {
+	page := libs.PG.With(models.DB.Model(&models.Movie{}).Preload("Genres.Movies").Preload(clause.Associations)).Request(c.Request).Cache("movies").Response(&movies)
+
+	for i := range movies {
+		for y := range movies[i].Genres {
 			movies[i].Genres[y].MovieCount = len(movies[i].Genres[y].Movies)
 		}
 	}
@@ -43,8 +44,17 @@ func FindMovies(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Movies retrieved successfully",
 		"data":    movies,
-		"total":   movieCount,
 		"success": true,
+		"pagination": libs.Pagination{
+			Page:       int(page.Page),
+			PageSize:   int(page.Size),
+			Total:      int(page.Total),
+			TotalPages: int(page.TotalPages),
+			MaxPage:    int(page.MaxPage),
+			First:      page.First,
+			Last:       page.Last,
+			Visible:    int(page.Visible),
+		},
 	})
 }
 
@@ -56,7 +66,7 @@ func FindMovie(c *gin.Context) {
 		return
 	}
 
-	for i := 0; i < len(movie.Genres); i++ {
+	for i := range movie.Genres {
 		movie.Genres[i].MovieCount = len(movie.Genres[i].Movies)
 	}
 
@@ -133,7 +143,7 @@ func UpdateMovie(c *gin.Context) {
 		models.DB.Model(&movie).Preload("Movies").Association("Genres").Append(&genre)
 	}
 
-	for i := 0; i < len(movie.Genres); i++ {
+	for i := range movie.Genres {
 		movie.Genres[i].MovieCount = len(movie.Genres[i].Movies)
 	}
 
@@ -146,6 +156,7 @@ func UpdateMovie(c *gin.Context) {
 
 func DeleteMovie(c *gin.Context) {
 	var movie models.Movie
+
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&movie).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
 		return

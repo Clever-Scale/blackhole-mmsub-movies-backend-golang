@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/heinkozin/blackhole-mmsub-movies/libs"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
 	"gorm.io/gorm/clause"
 )
@@ -22,11 +23,23 @@ type UpdateUserInput struct {
 
 func FindUsers(c *gin.Context) {
 	var users []models.User
-	models.DB.Find(&users)
+
+	page := libs.PG.With(models.DB.Model(models.User{}).Preload(clause.Associations)).Request(c.Request).Cache("users").Response(&users)
+
 	c.JSON(http.StatusOK, gin.H{
 		"data":    users,
 		"success": true,
 		"message": "Users found successfully",
+		"pagination": libs.Pagination{
+			Page:       int(page.Page),
+			PageSize:   int(page.Size),
+			Total:      int(page.Total),
+			TotalPages: int(page.TotalPages),
+			MaxPage:    int(page.MaxPage),
+			First:      page.First,
+			Last:       page.Last,
+			Visible:    int(page.Visible),
+		},
 	})
 }
 
