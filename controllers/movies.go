@@ -32,7 +32,13 @@ type UpdateMovieInput struct {
 func FindMovies(c *gin.Context) {
 	var movies []models.Movie
 	var movieCount int64
-	models.DB.Preload("Genres").Preload("MovieSource").Find(&movies).Count(&movieCount)
+	models.DB.Preload("Genres.Movies").Preload(clause.Associations).Find(&movies).Count(&movieCount)
+
+	for i := 0; i < len(movies); i++ {
+		for y := 0; y < len(movies[i].Genres); y++ {
+			movies[i].Genres[y].MovieCount = len(movies[i].Genres[y].Movies)
+		}
+	}
 
 	c.JSON(200, gin.H{
 		"message": "Movies retrieved successfully",
@@ -45,9 +51,13 @@ func FindMovies(c *gin.Context) {
 func FindMovie(c *gin.Context) {
 	var movie models.Movie
 
-	if err := models.DB.Preload("Genres").First(&movie, c.Param("id")).Error; err != nil {
+	if err := models.DB.Preload("Genres.Movies").First(&movie, c.Param("id")).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"data": err, "success": false})
 		return
+	}
+
+	for i := 0; i < len(movie.Genres); i++ {
+		movie.Genres[i].MovieCount = len(movie.Genres[i].Movies)
 	}
 
 	c.JSON(200, gin.H{
@@ -80,10 +90,8 @@ func CreateMovie(c *gin.Context) {
 	for _, genreID := range input.Genres {
 		var genre models.Genre
 		models.DB.Where("id = ? ", genreID).First(&genre)
-		models.DB.Model(&movie).Association("Genres").Append(&genre)
+		models.DB.Model(&movie).Preload("Movies").Association("Genres").Append(&genre)
 	}
-
-	// models.DB.Create(&movie).Association("Genres").Append(models.Genre{ID: input.Genres})
 
 	c.JSON(http.StatusOK, gin.H{
 		"data":    movie,
@@ -106,7 +114,7 @@ func UpdateMovie(c *gin.Context) {
 		return
 	}
 
-	if err := models.DB.Model(&movie).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Updates(
+	if err := models.DB.Model(&movie).Preload("Genres.Movies").Preload(clause.Associations).Where("id = ?", c.Param("id")).Updates(
 		models.Movie{
 			Title:         input.Title,
 			Description:   input.Description,
@@ -116,6 +124,17 @@ func UpdateMovie(c *gin.Context) {
 		}).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err, "success": false})
 		return
+	}
+
+	// connect the movie to the genres
+	for _, genreID := range input.Genres {
+		var genre models.Genre
+		models.DB.Where("id = ? ", genreID).First(&genre)
+		models.DB.Model(&movie).Preload("Movies").Association("Genres").Append(&genre)
+	}
+
+	for i := 0; i < len(movie.Genres); i++ {
+		movie.Genres[i].MovieCount = len(movie.Genres[i].Movies)
 	}
 
 	c.JSON(200, gin.H{
