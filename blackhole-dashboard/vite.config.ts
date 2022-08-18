@@ -1,5 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -7,8 +12,8 @@ export default defineConfig({
 	base: "./",
 	resolve: {
 		alias: {
-			"@localization": "./src/localization",
-			"@atoms": "./src/atoms",
+			"@localization": path.resolve(__dirname, "./src/localization"),
+			"@atoms": path.resolve(__dirname, "./src/atoms"),
 		},
 	},
 });
