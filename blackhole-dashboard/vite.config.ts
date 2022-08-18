@@ -14,6 +14,8 @@ export default defineConfig({
 		alias: {
 			"@localization": path.resolve(__dirname, "./src/localization"),
 			"@atoms": path.resolve(__dirname, "./src/atoms"),
+			"@layouts": path.resolve(__dirname, "./src/layouts"),
+			"@components": path.resolve(__dirname, "./src/Components"),
 		},
 	},
 });

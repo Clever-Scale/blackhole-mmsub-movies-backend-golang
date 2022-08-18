@@ -18,7 +18,9 @@
 		"baseUrl": ".",
 		"paths": {
 			"@localization/*": ["src/localization/*"],
-			"@atoms/*": ["src/atoms/*"]
+			"@atoms/*": ["src/atoms/*"],
+			"@layouts/*": ["src/layouts/*"],
+			"@components/*": ["src/Components/*"]
 		}
 	},
 	"include": ["src"],

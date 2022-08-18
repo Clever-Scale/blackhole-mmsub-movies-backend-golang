@@ -3,8 +3,8 @@ import reactLogo from "./assets/react.svg";
 // import viteLogo from "../public/vite.svg";
 import "./App.css";
 import { Button, Typography } from "@mui/material";
-import { Header } from "./Components/Header";
 import appLanguageStore from "@atoms/appLanguage.atom";
+import MainLayout from "@layouts/MainLayout";
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -12,15 +12,16 @@ function App() {
 	const toggleLanguage = appLanguageStore((state) => state.toggleLanguage);
 
 	return (
-		<div className="App">
-			<Header />
-			<h1>{count}</h1>
-			<button onClick={() => setCount(count + 1)}>+</button>
+		<MainLayout>
+			<Typography variant={"h1"}>{count}</Typography>
+			<Button color={"secondary"} onClick={() => setCount(count + 1)}>
+				+
+			</Button>
 			<Button variant={"contained"} onClick={() => toggleLanguage()}>
 				Toggle Language
 			</Button>
 			<Typography variant={"h2"}>Hello, Welcome to MMSub Movies</Typography>
-		</div>
+		</MainLayout>
 	);
 }
 
