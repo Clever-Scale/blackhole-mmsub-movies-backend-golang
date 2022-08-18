@@ -11,7 +11,7 @@ import (
 var DB *gorm.DB
 
 var RedisClient = redis.NewClient(&redis.Options{
-	Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+	Addr:     os.Getenv("REDIS_HOST"),
 	Password: "", // no password set
 	DB:       0,
 })
@@ -20,7 +20,9 @@ func ConnectDatabase() {
 
 	url := os.Getenv("DATABASE_URL")
 
-	database, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(url), &gorm.Config{
+		PrepareStmt: true,
+	})
 
 	if err != nil {
 		panic("Failed to connect to database!")
