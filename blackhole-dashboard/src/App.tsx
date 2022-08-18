@@ -20,7 +20,9 @@ function App() {
 			<Button variant={"contained"} onClick={() => toggleLanguage()}>
 				Toggle Language
 			</Button>
-			<Typography variant={"h2"}>Hello, Welcome to MMSub Movies</Typography>
+			<Typography variant={"h2"} className={"text-slate-800 text-9xl"}>
+				Hello, Welcome to MMSub Movies
+			</Typography>
 		</MainLayout>
 	);
 }
