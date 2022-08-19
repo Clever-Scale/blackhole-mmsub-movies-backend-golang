@@ -13,8 +13,12 @@
 		"@emotion/styled": "^11.10.0",
 		"@mui/icons-material": "^5.8.4",
 		"@mui/material": "^5.10.1",
+		"jotai": "^1.7.8",
+		"path": "^0.12.7",
 		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
+		"react-dom": "^18.2.0",
+		"url": "^0.11.0",
+		"zustand": "^4.0.0"
 	},
 	"devDependencies": {
 		"@types/react": "^18.0.17",
