@@ -5,24 +5,62 @@ import "./App.css";
 import { Button, Typography } from "@mui/material";
 import appLanguageStore from "@atoms/appLanguage.atom";
 import MainLayout from "@layouts/MainLayout";
+import { useRoutes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import { CreateMoviePage, MovieLayout, MoviePage } from "./pages/movies";
+import { SeriesLayout, SeriesPage } from "./pages/series";
 
 function App() {
-	const [count, setCount] = useState(0);
-	const setLang = appLanguageStore((state) => state.setLanguage);
-	const toggleLanguage = appLanguageStore((state) => state.toggleLanguage);
+  let element = useRoutes([
+    {
+      path: "/",
+      element: <MainLayout />,
 
-	return (
-		<MainLayout>
-			<Typography variant={"h1"}>{count}</Typography>
-			<Button color={"secondary"} onClick={() => setCount(count + 1)}>
-				+
-			</Button>
-			<Button variant={"contained"} onClick={() => toggleLanguage()}>
-				Toggle Language
-			</Button>
-			<Typography variant={"h2"}>Hello, Welcome to MMSub Movies</Typography>
-		</MainLayout>
-	);
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+        {
+          path: "movies",
+          element: <MovieLayout />,
+          children: [
+            {
+              index: true,
+              element: <MoviePage />,
+            },
+            {
+              path: "create-movie",
+              element: <CreateMoviePage />,
+            },
+          ],
+        },
+        {
+          path: "series",
+          element: <SeriesLayout />,
+          children: [
+            {
+              index: true,
+              element: <SeriesPage />,
+            },
+          ],
+        },
+      ],
+    },
+    // {
+    //   path: "movies",
+    //   element: <MoviePage />,
+    //   children: [
+    //     {
+    //       path: "create-movie",
+    //       element: <CreateMoviePage />,
+    //     },
+    //   ],
+    // },
+    // { path: "series", element: <SeriesPage /> },
+  ]);
+
+  return element;
 }
 
 export default App;
