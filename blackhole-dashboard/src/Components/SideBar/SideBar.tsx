@@ -11,6 +11,7 @@ import React from "react";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MovieIcon from "@mui/icons-material/Movie";
 import MovieFilterIcon from "@mui/icons-material/MovieFilter";
+import { Link } from "react-router-dom";
 
 export default function SideBar() {
   const theme = useTheme();
@@ -21,56 +22,42 @@ export default function SideBar() {
     >
       <DrawerHeader />
       <Stack
-        sx={{ width: "130px", height: "100%", paddingY: theme.spacing(4) }}
+        sx={{ width: "100px", height: "100%", paddingY: theme.spacing(4) }}
         alignItems={"center"}
         spacing={2}
       >
         <StyledSidebarItem>
-          <StyledSidebarLink>
-            <DashboardIcon />
-            <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-              Dashboard
-            </Typography>
-          </StyledSidebarLink>
+          <StyledLink to={"/"}>
+            <DashboardIcon style={{ fontSize: 35 }} />
+          </StyledLink>
         </StyledSidebarItem>
         <StyledSidebarItem>
-          <StyledSidebarLink>
-            <MovieIcon />
-            <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-              Movies
-            </Typography>
-          </StyledSidebarLink>
+          <StyledLink to={"/movies"}>
+            <MovieIcon style={{ fontSize: 35 }} />
+          </StyledLink>
         </StyledSidebarItem>
         <StyledSidebarItem>
-          <StyledSidebarLink>
-            <MovieFilterIcon />
-            <Typography variant="subtitle2" sx={{ fontSize: 12 }}>
-              Series
-            </Typography>
-          </StyledSidebarLink>
+          <StyledLink to={"/series"}>
+            <MovieFilterIcon style={{ fontSize: 35 }} />
+          </StyledLink>
         </StyledSidebarItem>
       </Stack>
     </Drawer>
   );
 }
 
+const StyledLink = styled(Link)(({ theme }) => ({
+  color: colors.grey[700],
+  "&:hover": {
+    color: theme.palette.secondary.main,
+  },
+}));
+
 const StyledSidebarItem = styled(Box)(({ theme }) => ({
   width: "100%",
-  borderRight: `10px solid ${colors.blue[500]}`,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  backgroundColor: colors.grey[100],
-  padding: "6px 0px",
-}));
-
-const StyledSidebarLink = styled(Box)(({ theme }) => ({
-  display: "flex",
-  width: "100px",
-  justifyContent: "start",
-  alignItems: "center",
-  cursor: "pointer",
-  gap: 4,
 }));
 
 const DrawerHeader = styled("div")(({ theme }) => ({
