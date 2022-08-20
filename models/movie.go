@@ -12,10 +12,11 @@ type Movie struct {
 	Description   string         `json:"description" gorm:"not null"`
 	StreamingTime uint           `json:"streaming_time"`
 	ParentID      uint           `json:"parent_id" gorm:"null"`
-	ImDbID        uint           `json:"imdb_id"`
-	ReleasedAt    time.Time      `json:"release_date"`
+	ImDbID        string         `json:"imdb_id"`
+	ReleasedAt    string         `json:"release_date"`
 	Genres        []Genre        `json:"genres" gorm:"many2many:movie_genres;"`
 	MovieSource   []MovieSource  `json:"movie_sources" gorm:"foreignKey:MovieID"`
+	Rating        float32        `json:"rating"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `json:"deleted_at" gorm:"index"`
