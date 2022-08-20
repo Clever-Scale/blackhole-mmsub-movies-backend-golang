@@ -9,7 +9,7 @@ import (
 func main() {
 
 	// Load .env file
-	godotenv.Load()
+	godotenv.Load(".env.local")
 
 	r := gin.Default()
 

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/heinkozin/blackhole-mmsub-movies/libs"
@@ -11,23 +11,25 @@ import (
 )
 
 type CreateMovieInput struct {
-	Title         string    `json:"title" binding:"required"`
-	Description   string    `json:"description" binding:"required"`
-	StreamingTime uint      `json:"streaming_time" binding:"required"`
-	ParentID      uint      `json:"parent_id"`
-	ImDbID        uint      `json:"imdb_id"`
-	ReleasedAt    time.Time `json:"release_date" binding:"required"`
-	Genres        []uint    `json:"genres" binding:"required"`
+	Title         string   `json:"title" binding:"required"`
+	Description   string   `json:"description" binding:"required"`
+	StreamingTime uint     `json:"streaming_time" binding:"required"`
+	ParentID      uint     `json:"parent_id"`
+	ImDbID        string   `json:"imdb_id"`
+	ReleasedAt    string   `json:"release_date" binding:"required"`
+	Rating        float32  `json:"rating"`
+	Genres        []string `json:"genres" binding:"required"`
 }
 
 type UpdateMovieInput struct {
-	Title         string    `json:"title"`
-	Description   string    `json:"description"`
-	StreamingTime uint      `json:"streaming_time"`
-	ParentID      uint      `json:"parent_id"`
-	ImDbID        uint      `json:"imdb_id"`
-	ReleasedAt    time.Time `json:"release_date"`
-	Genres        []uint    `json:"genres"`
+	Title         string  `json:"title"`
+	Description   string  `json:"description"`
+	StreamingTime uint    `json:"streaming_time"`
+	ParentID      uint    `json:"parent_id"`
+	ImDbID        string  `json:"imdb_id"`
+	ReleasedAt    string  `json:"release_date"`
+	Rating        float32 `json:"rating"`
+	Genres        []uint  `json:"genres"`
 }
 
 func FindMovies(c *gin.Context) {
@@ -91,15 +93,23 @@ func CreateMovie(c *gin.Context) {
 		ParentID:      input.ParentID,
 		ImDbID:        input.ImDbID,
 		ReleasedAt:    input.ReleasedAt,
+		Rating:        input.Rating,
 	}
 
 	// Create the movie, and then the genres
 	models.DB.Create(&movie)
 
 	// connect the movie to the genres
-	for _, genreID := range input.Genres {
+	for _, genreTitle := range input.Genres {
+		slug := strings.ToLower(strings.Replace(genreTitle, " ", "-", -1))
 		var genre models.Genre
-		models.DB.Where("id = ? ", genreID).First(&genre)
+		if err := models.DB.Where("LOWER(slug) = ? ", slug).First(&genre).Error; err != nil {
+			genre = models.Genre{
+				Title: genreTitle,
+				Slug:  slug,
+			}
+			models.DB.Create(&genre)
+		}
 		models.DB.Model(&movie).Preload("Movies").Association("Genres").Append(&genre)
 	}
 

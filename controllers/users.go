@@ -1,11 +1,17 @@
 package controllers
 
 import (
+	"image"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 
+	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/heinkozin/blackhole-mmsub-movies/libs"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
+	"github.com/lithammer/shortuuid/v4"
 	"gorm.io/gorm/clause"
 )
 
@@ -16,9 +22,10 @@ type CreateUserInput struct {
 }
 
 type UpdateUserInput struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name       string               `form:"name"`
+	Email      string               `form:"email"`
+	Password   string               `form:"password"`
+	ProfilePic multipart.FileHeader `form:"profile_pic"`
 }
 
 func FindUsers(c *gin.Context) {
@@ -87,6 +94,7 @@ func CreateUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
+
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
 		return
@@ -94,16 +102,51 @@ func UpdateUser(c *gin.Context) {
 
 	// Validate input
 	var input UpdateUserInput
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.MustBindWith(&input, binding.Form); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
 		return
 	}
 
+	file, _ := c.FormFile("profile_pic")
+
+	var fileName string
+
+	if file != nil {
+		// accept only jpeg, png, jpg image
+		if !(filepath.Ext(file.Filename) == ".jpg" || filepath.Ext(file.Filename) == ".png" || filepath.Ext(file.Filename) == ".jpeg") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format!", "success": false})
+			return
+		}
+
+		multiFile, _ := file.Open()
+
+		// reduce uploaded image size to 1MB
+		img, _, err := image.Decode(multiFile)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format!", "success": false})
+			return
+		}
+
+		dstImage128 := imaging.Resize(img, 500, 500, imaging.CatmullRom)
+
+		// generate uuid for file name
+		fileName = shortuuid.New() + filepath.Ext(file.Filename)
+
+		// Upload file
+		if err := imaging.Save(dstImage128, "./uploads/"+fileName); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
+			return
+		}
+
+	}
+
 	if err := models.DB.Model(&user).Clauses(clause.Returning{}).Where("id = ?", c.Param("id")).Updates(
 		models.User{
-			Name:     input.Name,
-			Email:    input.Email,
-			Password: input.Password,
+			Name:       input.Name,
+			Email:      input.Email,
+			Password:   input.Password,
+			ProfilePic: fileName,
 		}).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err, "success": false})
 		return
