@@ -261,6 +261,7 @@ function CreateMoviePage() {
 											id="combo-box-demo"
 											options={allGenres.data?.genres ?? []}
 											multiple
+											freeSolo
 											getOptionLabel={(option: any) => option.name}
 											filterSelectedOptions
 											size={"small"}

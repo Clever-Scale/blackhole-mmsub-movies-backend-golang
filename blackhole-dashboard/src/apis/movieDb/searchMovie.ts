@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { AllGenresResponseInterface } from "./useAllGenres";
 
 const useSearchMovieWithTitle = (title: string, inCludeAdult = false) => {
+	title === "" ? (title = "Who am I") : title;
 	const API_KEY = "c6e84f9b84872a49a4f26020835b8700";
 	let res = useSWR<SearchMovieResponseInterface>(
 		`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${title}&include_adult=${inCludeAdult}`,
