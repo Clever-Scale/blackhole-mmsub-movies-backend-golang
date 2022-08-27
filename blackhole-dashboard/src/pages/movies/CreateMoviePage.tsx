@@ -66,16 +66,14 @@ function CreateMoviePage() {
 		if (selectedMovie?.genres) {
 			setGenres(selectedMovie.genres);
 		}
-		if (!selectedMovie) {
-			setGenres([]);
-		}
 	}, [
 		searchMovie,
 		setKeyword,
 		keyword,
 		searchedMovies,
 		selectedMovie,
-		setMovies,
+		setGenres,
+		allGenres,
 	]);
 
 	return (
@@ -126,7 +124,6 @@ function CreateMoviePage() {
 													opt as SearchMovieResponseInterface["results"][0];
 												const value =
 													val as SearchMovieResponseInterface["results"][0];
-
 												return option.id === value.id;
 											}}
 											renderOption={(p, opt, st) => {
@@ -187,7 +184,6 @@ function CreateMoviePage() {
 											onChange={(e, v, r) => {
 												var movie =
 													v as SearchMovieResponseInterface["results"][0];
-
 												setSelectedMovie(movie);
 											}}
 										/>
@@ -273,6 +269,7 @@ function CreateMoviePage() {
 												const value = v as AllGenresResponseInterface["genres"];
 												setGenres(value);
 											}}
+											onInputChange={(e, v, r) => {}}
 											clearOnBlur
 											filterOptions={(options: any, params: any) => {
 												const filtered = filter(options, params);
@@ -294,6 +291,7 @@ function CreateMoviePage() {
 											renderInput={(params) => (
 												<StyledTextField {...params} label="Select Genres" />
 											)}
+											disabled={selectedMovie ? true : false}
 										/>
 									</Grid>
 									<Grid item xs={4}>
