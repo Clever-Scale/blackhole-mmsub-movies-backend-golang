@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
+	"github.com/heinkozin/blackhole-mmsub-movies/routes"
 	"github.com/joho/godotenv"
 )
 
@@ -17,7 +18,7 @@ func main() {
 	models.ConnectDatabase()
 
 	// Initialize routes
-	InitRoutes(r)
+	routes.InitRoutes(r)
 
 	// Run the server
 	r.Run()
