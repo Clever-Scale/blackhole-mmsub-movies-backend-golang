@@ -29,6 +29,15 @@ type Claims struct {
 
 var secret = []byte("gin-bookstore")
 
+// LoginUser godoc
+// @Summary     Login Account
+// @Description Login account by email and password
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Param request body LoginUserInput true "query params"
+// @Success     200 {object} LoginSuccess
+// @Router      /auth/login [post]
 func LoginUser(c *gin.Context) {
 	// Validate input
 	var input LoginUserInput
@@ -58,6 +67,14 @@ func LoginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": &LoginSuccess{user, token}})
 }
 
+// Me godoc
+// @Summary     Get user info
+// @Description Get user info by token
+// @Tags        Auth
+// @Produce     json
+// @Success     200 {object} models.User
+// @Router      /auth/me [post]
+// @Security 	BearerAuth
 func Me(c *gin.Context) {
 	user := c.MustGet("user").(models.User)
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": user})

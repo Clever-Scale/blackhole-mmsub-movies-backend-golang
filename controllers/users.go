@@ -28,16 +28,24 @@ type UpdateUserInput struct {
 	ProfilePic multipart.FileHeader `form:"profile_pic"`
 }
 
+// ListUser godoc
+// @Summary     List All User
+// @Description List All User
+// @Tags        user
+// @Produce     json
+// @Success     200 {object} libs.JSONResult{message=string,data=[]models.User,success=bool}
+// @Router      /users [get]
+// @Security BearerAuth
 func FindUsers(c *gin.Context) {
 	var users []models.User
 
 	page := libs.PG.With(models.DB.Model(models.User{}).Preload(clause.Associations)).Request(c.Request).Cache("users").Response(&users)
 
-	c.JSON(http.StatusOK, gin.H{
-		"data":    users,
-		"success": true,
-		"message": "Users found successfully",
-		"pagination": libs.Pagination{
+	c.JSON(http.StatusOK, libs.JSONResult{
+		Message: "Users found successfully",
+		Data:    users,
+		Success: true,
+		Pagination: &libs.Pagination{
 			Page:       int(page.Page),
 			PageSize:   int(page.Size),
 			Total:      int(page.Total),
@@ -54,21 +62,30 @@ func FindUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Record not found!", Success: false})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User found successfully",
-		"data":    user,
-		"success": true,
+	c.JSON(http.StatusOK, libs.JSONResult{
+		Message: "User found successfully",
+		Data:    user,
+		Success: true,
 	})
 }
 
+// RegisterUser godoc
+// @Summary     Register User
+// @Description Register User
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Param request body CreateUserInput true "query params"
+// @Success     200 {object} libs.JSONResult{message=string,data=models.User,success=bool}
+// @Router      /auth/register [post]
 func CreateUser(c *gin.Context) {
 	// Validate input
 	var input CreateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: err.Error(), Success: false})
 		return
 	}
 
@@ -77,17 +94,17 @@ func CreateUser(c *gin.Context) {
 	user := models.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
 	// check user email in database
 	if err := models.DB.Where("email = ?", input.Email).First(&user).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists!", "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Email already exists!", Success: false})
 		return
 	}
 
 	// Create user
 	models.DB.Create(&user)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User created successfully",
-		"data":    user,
-		"success": true,
+	c.JSON(http.StatusOK, libs.JSONResult{
+		Message: "User created successfully",
+		Data:    user,
+		Success: true,
 	})
 }
 
@@ -96,14 +113,14 @@ func UpdateUser(c *gin.Context) {
 	var user models.User
 
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Record not found!", Success: false})
 		return
 	}
 
 	// Validate input
 	var input UpdateUserInput
 	if err := c.MustBindWith(&input, binding.Form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: err.Error(), Success: false})
 		return
 	}
 
@@ -114,7 +131,7 @@ func UpdateUser(c *gin.Context) {
 	if file != nil {
 		// accept only jpeg, png, jpg image
 		if !(filepath.Ext(file.Filename) == ".jpg" || filepath.Ext(file.Filename) == ".png" || filepath.Ext(file.Filename) == ".jpeg") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format!", "success": false})
+			c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Invalid image format!", Success: false})
 			return
 		}
 
@@ -124,7 +141,7 @@ func UpdateUser(c *gin.Context) {
 		img, _, err := image.Decode(multiFile)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format!", "success": false})
+			c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Invalid image format!", Success: false})
 			return
 		}
 
@@ -135,7 +152,7 @@ func UpdateUser(c *gin.Context) {
 
 		// Upload file
 		if err := imaging.Save(dstImage128, "./uploads/"+fileName); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "success": false})
+			c.JSON(http.StatusBadRequest, libs.JSONResult{Message: err.Error(), Success: false})
 			return
 		}
 
@@ -148,14 +165,14 @@ func UpdateUser(c *gin.Context) {
 			Password:   input.Password,
 			ProfilePic: fileName,
 		}).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err, "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: err.Error(), Success: false})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User updated successfully",
-		"data":    user,
-		"success": true,
+	c.JSON(http.StatusOK, libs.JSONResult{
+		Message: "User updated successfully",
+		Data:    user,
+		Success: true,
 	})
 }
 
@@ -163,14 +180,14 @@ func DeleteUser(c *gin.Context) {
 	// Get model if exist
 	var user models.User
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!", "success": false})
+		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Record not found!", Success: false})
 		return
 	}
 	models.DB.Delete(&user)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User deleted successfully",
-		"data":    user,
-		"success": true,
+	c.JSON(http.StatusOK, libs.JSONResult{
+		Message: "User deleted successfully",
+		Data:    user,
+		Success: true,
 	})
 }

@@ -9,14 +9,14 @@ import (
 )
 
 type Pagination struct {
-	Page       int  `json:"page"`
-	PageSize   int  `json:"page_size"`
-	Total      int  `json:"total"`
-	TotalPages int  `json:"total_pages"`
-	MaxPage    int  `json:"max_page"`
-	Last       bool `json:"last"`
-	First      bool `json:"first"`
-	Visible    int  `json:"visible"`
+	Page       int  `json:"page,omitempty"`
+	PageSize   int  `json:"page_size,omitempty"`
+	Total      int  `json:"total,omitempty"`
+	TotalPages int  `json:"total_pages,omitempty"`
+	MaxPage    int  `json:"max_page,omitempty"`
+	Last       bool `json:"last,omitempty"`
+	First      bool `json:"first,omitempty"`
+	Visible    int  `json:"visible,omitempty"`
 }
 
 var adapterConfig = cache.RedisCacheConfig{

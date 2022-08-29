@@ -1,0 +1,200 @@
+basePath: /api/v1
+definitions:
+  controllers.CreateUserInput:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  controllers.LoginSuccess:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  controllers.LoginUserInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  libs.JSONResult:
+    properties:
+      data: {}
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/libs.Pagination'
+      success:
+        type: boolean
+    type: object
+  libs.Pagination:
+    properties:
+      first:
+        type: boolean
+      last:
+        type: boolean
+      max_page:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+      visible:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      profile_pic:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: heinkozin4@gmail.com
+    name: Hein Ko Zin
+    url: https://github.com/HeinKoZin
+  description: This is a movie streaming website api.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Blackhole MMSub Movies API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login account by email and password
+      parameters:
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.LoginSuccess'
+      summary: Login Account
+      tags:
+      - Auth
+  /auth/me:
+    post:
+      description: Get user info by token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      security:
+      - BearerAuth: []
+      summary: Get user info
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register User
+      parameters:
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/libs.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+                message:
+                  type: string
+                success:
+                  type: boolean
+              type: object
+      summary: Register User
+      tags:
+      - Auth
+  /users:
+    get:
+      description: List All User
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/libs.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.User'
+                  type: array
+                message:
+                  type: string
+                success:
+                  type: boolean
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List All User
+      tags:
+      - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
