@@ -64,7 +64,7 @@ func LoginUser(c *gin.Context) {
 	}
 	// Generate token
 	token, _ := GenerateToken(int(user.ID))
-	c.JSON(http.StatusOK, gin.H{"success": true, "data": &LoginSuccess{user, token}})
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": &LoginSuccess{user, "Bearer " + token}})
 }
 
 // Me godoc
@@ -163,4 +163,23 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+// Role GUARD
+func RoleGuard(r models.Role) func(c *gin.Context) {
+	var user models.User
+	return func(c *gin.Context) {
+		user = c.MustGet("user").(models.User)
+		if r == user.Role {
+			c.Next()
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    2005,
+				"message": "invalid role",
+				"success": false,
+			})
+			c.Abort()
+			return
+		}
+	}
 }

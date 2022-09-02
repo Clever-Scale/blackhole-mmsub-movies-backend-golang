@@ -8,7 +8,6 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/heinkozin/blackhole-mmsub-movies/libs"
 	"github.com/heinkozin/blackhole-mmsub-movies/models"
 	"github.com/lithammer/shortuuid/v4"
@@ -16,16 +15,18 @@ import (
 )
 
 type CreateUserInput struct {
-	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Name     string      `json:"name" binding:"required"`
+	Email    string      `json:"email" binding:"required"`
+	Password string      `json:"password" binding:"required"`
+	Role     models.Role `json:"role"`
 }
 
 type UpdateUserInput struct {
-	Name       string               `form:"name"`
-	Email      string               `form:"email"`
-	Password   string               `form:"password"`
-	ProfilePic multipart.FileHeader `form:"profile_pic"`
+	Name       string               `form:"name" json:"name"`
+	Email      string               `form:"email" json:"email"`
+	Password   string               `form:"password" json:"password"`
+	ProfilePic multipart.FileHeader `form:"profile_pic" json:"profile_pic"`
+	Role       models.Role          `form:"role" json:"role"`
 }
 
 // ListUser godoc
@@ -91,7 +92,7 @@ func CreateUser(c *gin.Context) {
 
 	hashedPassword, _ := HashPassword(input.Password)
 
-	user := models.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
+	user := models.User{Name: input.Name, Email: input.Email, Password: hashedPassword, Role: input.Role}
 	// check user email in database
 	if err := models.DB.Where("email = ?", input.Email).First(&user).Error; err == nil {
 		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: "Email already exists!", Success: false})
@@ -119,7 +120,7 @@ func UpdateUser(c *gin.Context) {
 
 	// Validate input
 	var input UpdateUserInput
-	if err := c.MustBindWith(&input, binding.Form); err != nil {
+	if err := c.Bind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: err.Error(), Success: false})
 		return
 	}
@@ -164,6 +165,7 @@ func UpdateUser(c *gin.Context) {
 			Email:      input.Email,
 			Password:   input.Password,
 			ProfilePic: fileName,
+			Role:       models.Role(input.Role),
 		}).Error; err != nil {
 		c.JSON(http.StatusBadRequest, libs.JSONResult{Message: err.Error(), Success: false})
 		return
