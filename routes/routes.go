@@ -23,7 +23,7 @@ func InitRoutes(r *gin.Engine) *gin.Engine {
 		users.GET("/", controllers.JWTAuthMiddleware(), controllers.FindUsers)
 		users.GET("/:id", controllers.JWTAuthMiddleware(), controllers.FindUser)
 		users.POST("/", controllers.CreateUser)
-		users.PATCH("/:id", controllers.JWTAuthMiddleware(), controllers.UpdateUser)
+		users.PATCH("/:id", controllers.JWTAuthMiddleware(), controllers.RoleGuard(models.ADMIN), controllers.UpdateUser)
 		users.DELETE("/:id", controllers.JWTAuthMiddleware(), controllers.RoleGuard(models.ADMIN), controllers.DeleteUser)
 
 		// movies

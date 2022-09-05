@@ -170,6 +170,13 @@ func RoleGuard(r models.Role) func(c *gin.Context) {
 	var user models.User
 	return func(c *gin.Context) {
 		user = c.MustGet("user").(models.User)
+		// id, _ := strconv.ParseUint(c.Param("id"), 5, 64)
+
+		// if user.ID == uint(id) {
+		// 	c.Next()
+		// }
+
+		// fmt.Print(user)
 		if r == user.Role {
 			c.Next()
 		} else {
